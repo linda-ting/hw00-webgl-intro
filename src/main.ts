@@ -21,6 +21,7 @@ let icosphere: Icosphere;
 let square: Square;
 let cube: Cube;
 let prevTesselations: number = 5;
+let time: number = 0;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
@@ -70,9 +71,14 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);    
 
+  const customShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/custom-trig-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-noise-frag.glsl')),
+  ]);
+
   // Set color when changed by user in GUI
   colorController.onChange( function() {
-    lambert.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
+    customShader.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
   });
 
   // This function will be called every frame
@@ -81,21 +87,20 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+    console.log(time);
+
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, lambert, [
-      // icosphere,
-      // square,
-      cube,
-    ]);
+    renderer.render(camera, customShader, [cube], time);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
+    time++;
   }
 
   window.addEventListener('resize', function() {
