@@ -1,5 +1,16 @@
 # HW 0: Noisy Planet Part 1 (Intro to Javascript and WebGL)
 
+## Submission
+Added features include:
+1. UI component to allow user to modify the color of the geometry being rendered
+2. Vertex shader that deforms the geometry over time
+3. Fragment shader that utilizes Fractal Brownian Motion and a cosine color palette 
+
+Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/).
+
+![](img/icosphere.png)
+![](img/cube.png)
+
 <p align="center">
   <img width="360" height="360" src="https://user-images.githubusercontent.com/1758825/132532354-e3a45402-e484-499e-bfa7-2d73b9f2c946.png">
 </p>
