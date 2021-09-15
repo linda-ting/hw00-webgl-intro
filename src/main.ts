@@ -14,7 +14,7 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  'Color': [255, 255, 255]
+  'Color': [155,255,190]
 };
 
 let icosphere: Icosphere;
@@ -63,7 +63,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.9, 0.6, 0.4, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -77,6 +77,7 @@ function main() {
   ]);
 
   // Set color when changed by user in GUI
+  customShader.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
   colorController.onChange( function() {
     customShader.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
   });

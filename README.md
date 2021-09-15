@@ -11,15 +11,15 @@ Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/).
 ![](img/icosphere.png)
 ![](img/cube.png)
 
-<p align="center">
-  <img width="360" height="360" src="https://user-images.githubusercontent.com/1758825/132532354-e3a45402-e484-499e-bfa7-2d73b9f2c946.png">
-</p>
-<p align="center">(source: Ken Perlin)</p>
-
 ## Objective
 - Check that the tools and build configuration we will be using for the class works.
 - Start learning Typescript and WebGL2
 - Practice implementing noise
+
+<p align="center">
+  <img width="360" height="360" src="https://user-images.githubusercontent.com/1758825/132532354-e3a45402-e484-499e-bfa7-2d73b9f2c946.png">
+</p>
+<p align="center">(source: Ken Perlin)</p>
 
 ## Forking the Code
 Rather than cloning the homework repository, please __fork__ the code into your own repository using the `Fork` button in the upper-right hand corner of the Github UI. This will enable you to have your own personal repository copy of the code, and let you make a live demo (described later in this document).
