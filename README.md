@@ -8,8 +8,8 @@ Added features include:
 
 Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/).
 
-![](img/icosphere.png)
-![](img/cube.png)
+![](img/icosphere_ex.png)
+![](img/cube_ex.png)
 
 ## Objective
 - Check that the tools and build configuration we will be using for the class works.
