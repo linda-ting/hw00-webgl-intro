@@ -12,9 +12,11 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  tesselations: 5,
+  tesselations: 6,
   'Load Scene': loadScene, // A function pointer, essentially
-  'Color': [155,255,190]
+  'Color': [90, 115, 255],
+  temperature: 5,
+  precipitation: 5
 };
 
 let icosphere: Icosphere;
@@ -45,6 +47,8 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
+  const tempController = gui.add(controls, 'temperature', 0, 10).step(1);
+  const precipController = gui.add(controls, 'precipitation', 0, 10).step(1);
   const colorController = gui.addColor(controls, 'Color');
 
   // get canvas and webgl context
@@ -63,7 +67,6 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.9, 0.6, 0.4, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -76,10 +79,32 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-noise-frag.glsl')),
   ]);
 
+  const planet = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/planet-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/planet-frag.glsl')),
+  ]);
+
+  // Change shader program used here
+  const shader = planet;
+
   // Set color when changed by user in GUI
-  customShader.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
+  planet.setGeometryColor(vec4.fromValues(controls.Color[0] / 255., controls.Color[1] / 255., controls.Color[2] / 255., 1));
+  renderer.setClearColor(controls.Color[0] / 255., controls.Color[1] / 255., controls.Color[2] / 255., 1.0);
   colorController.onChange( function() {
-    customShader.setGeometryColor(vec4.fromValues(controls.Color[0] / 255, controls.Color[1] / 255, controls.Color[2] / 255, 1));
+    planet.setGeometryColor(vec4.fromValues(controls.Color[0] / 255., controls.Color[1] / 255., controls.Color[2] / 255., 1));
+    renderer.setClearColor(controls.Color[0] / 255., controls.Color[1] / 255., controls.Color[2] / 255., 1.0);
+  });
+
+  // Set temperature when changed by user in GUI
+  planet.setTemperature(controls.temperature);
+  tempController.onChange( function() {
+    planet.setTemperature(controls.temperature);
+  });
+
+  // Set precipitation when changed by user in GUI
+  planet.setPrecipitation(controls.precipitation);
+  precipController.onChange( function() {
+    planet.setPrecipitation(controls.precipitation);
   });
 
   // This function will be called every frame
@@ -96,7 +121,7 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, customShader, [cube], time);
+    renderer.render(camera, shader, [icosphere], time);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
