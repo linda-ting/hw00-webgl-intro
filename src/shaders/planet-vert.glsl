@@ -49,6 +49,11 @@ float easeInOutQuart(float t) {
   return 1.0 - pow(-2.0 * t + 2.0, 4.0) / 2.0;
 }
 
+float parabola(float x) {
+  float t = fract(x);
+  return pow(4.0 * t * (1.0 - t), 2.0);
+}
+
 float noise3D(vec3 p) {
 	return fract(sin(dot(p, vec3(127.1, 311.7, 244.1))) * 1288.002);
 }
@@ -198,15 +203,15 @@ void main()
   fs_Biome = float(biome);
   if (biome == 2) {
     // add mountains to tundra
-    modelposition.xyz += 0.1 * easeInOutQuart(sin(float(u_Time) * 0.001)) * pow(worley(modelposition.xyz), 3.0) * vec3(vs_Nor);
+    modelposition.xyz += 0.08 * parabola(float(u_Time) * 0.001) * pow(worley(modelposition.xyz), 3.0) * vec3(vs_Nor);
   } else if (biome == 3) {
     // add canyons to desert
-    float noise = worley(modelposition.xyz);
-    if (noise < 0.6) {
-      modelposition.xyz += 0.1 * easeInOutQuart(sin(float(u_Time) * 0.001)) * vec3(vs_Nor);
+    float noise = worley(modelposition.xyz / 4.0);
+    if (noise < 0.4) {
+      modelposition.xyz -= 0.25 * (0.5 * easeInOutQuart(sin(float(u_Time) * 0.003)) + 1.0) * vec3(vs_Nor);
     }
   }
-  modelposition.xyz += 0.64 * fbm3D(modelposition.xyz + vec3(sin(float(u_Time) * .0005))) * vec3(vs_Nor);
+  modelposition.xyz += 0.64 * fbm3D(modelposition.xyz + vec3(sin(float(u_Time) * .0001))) * vec3(vs_Nor);
   fs_Height = length(modelposition.xyz);
   fs_Col = vs_Col;
 

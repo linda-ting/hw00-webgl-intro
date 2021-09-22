@@ -1,6 +1,24 @@
 # HW 0: Noisy Planet Part 1 (Intro to Javascript and WebGL)
 
-## Submission
+## HW1: Submission
+by Linda Ting (lstting)
+
+References:
+1. [Easing functions](https://easings.net/)
+
+Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/)
+
+![](img/planet_2.png)
+
+Techniques used:
+1. 3D fractial brownian motion used to generate terrain height and fog/clouds (3D interpolation)
+2. Perlin noise used to generate temperature and precipitation maps, which were then used to classify 4 biomes
+3. Light position is modified at each frame to simulate day/night cycles (sinusoids)
+4. Base terrain is modified using worley noise depending on biome type
+5. Terrain modification by biome is animated with an easing function and parabolic signal
+6. Lambertian and Blinn-phong shading
+
+## HW0: Submission
 Added features include:
 1. UI component to allow user to modify the color of the geometry being rendered
 2. Vertex shader that deforms the geometry over time

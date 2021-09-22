@@ -99,8 +99,12 @@ vec4 fog(vec3 p) {
 }
 
 vec3 terrainColor(float height, int biome) {
+  if (height <= 1.0) {
+    return vec3(230.0, 107.0, 79.0) / vec3(255.0);
+  }
+  
   if (biome != 3) {
-    if (height <= 1.61) {
+      if (height <= 1.61) {
       // deep ocean
       return u_Color.rgb + vec3(.14, -.21,-.18);
     } else if (height <= 1.655) {
@@ -130,7 +134,7 @@ vec3 terrainColor(float height, int biome) {
     return vec3(212.0, 243.0, 219.0)/ vec3(255.0);
   } else if (biome == 3) {
     // desert
-    if (height <= 1.7) {
+    if (height <= 1.6) {
       return vec3(230.0, 107.0, 79.0) / vec3(255.0);
     } else if (height <= 1.745) {
       return vec3(255.0, 167.0, 113.0)  / vec3(255.0);
@@ -158,12 +162,13 @@ void main()
   diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);
 
   // Calculate specular light intensity
+  float specularTerm = 0.0;
   vec4 view = normalize(fs_CameraPos - fs_Pos);
   vec4 sumViewLight = view + fs_LightVec;
   vec4 h = sumViewLight / 2.0;
-  float specularTerm = max(pow(dot(h, normalize(fs_Nor)), 30.0), 0.0);
+  specularTerm = max(pow(dot(h, normalize(fs_Nor)), 50.0), 0.0);
 
-  float ambientTerm = 0.4;
+  float ambientTerm = 0.3;
   float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                       //to simulate ambient lighting. This ensures that faces that are not
                                                       //lit by our point light are not completely black.
