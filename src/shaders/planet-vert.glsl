@@ -42,6 +42,17 @@ out float fs_Height;
 vec4 lightPos = vec4(-5, -5, 4, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
 
+float bias(float t, float b) {
+  return (t / ((((1.0 / b) - 2.0) * (1.0 - t)) + 1.0));
+}
+
+float gain(float t, float g) {
+  if(t < 0.5)
+    return bias(t * 2.0, g) / 2.0;
+  else
+    return bias(t * 2.0 - 1.0, 1.0 - g) / 2.0 + 0.5;
+}
+
 float easeInOutQuart(float t) {
   if (t < 0.5) {
     return 8.0 * t * t * t * t;
@@ -54,11 +65,11 @@ float parabola(float x) {
   return pow(4.0 * t * (1.0 - t), 2.0);
 }
 
-float noise3D(vec3 p) {
+float noise(vec3 p) {
 	return fract(sin(dot(p, vec3(127.1, 311.7, 244.1))) * 1288.002);
 }
 
-float interpNoise3D(float x, float y, float z) {
+float interpNoise(float x, float y, float z) {
   int intX = int(floor(x));
   float fractX = fract(x);
   int intY = int(floor(y));
@@ -66,15 +77,15 @@ float interpNoise3D(float x, float y, float z) {
   int intZ = int(floor(z));
   float fractZ = fract(z);
 
-  float v1 = noise3D(vec3(intX, intY, intZ));
-  float v2 = noise3D(vec3(intX + 1, intY, intZ));
-  float v3 = noise3D(vec3(intX, intY + 1, intZ));
-  float v4 = noise3D(vec3(intX + 1, intY + 1, intZ));
+  float v1 = noise(vec3(intX, intY, intZ));
+  float v2 = noise(vec3(intX + 1, intY, intZ));
+  float v3 = noise(vec3(intX, intY + 1, intZ));
+  float v4 = noise(vec3(intX + 1, intY + 1, intZ));
 
-  float v5 = noise3D(vec3(intX, intY, intZ + 1));
-  float v6 = noise3D(vec3(intX + 1, intY, intZ + 1));
-  float v7 = noise3D(vec3(intX, intY + 1, intZ + 1));
-  float v8 = noise3D(vec3(intX + 1, intY + 1, intZ + 1));
+  float v5 = noise(vec3(intX, intY, intZ + 1));
+  float v6 = noise(vec3(intX + 1, intY, intZ + 1));
+  float v7 = noise(vec3(intX, intY + 1, intZ + 1));
+  float v8 = noise(vec3(intX + 1, intY + 1, intZ + 1));
 
   float i1 = mix(v1, v2, fractX);
   float i2 = mix(v3, v4, fractX);
@@ -87,8 +98,7 @@ float interpNoise3D(float x, float y, float z) {
   return mix(i5, i6, fractZ);
 }
 
-float fbm3D(vec3 p) {
-  p *= 0.75;
+float fbm(vec3 p) {
   float x = p.x;
   float y = p.y;
   float z = p.z;
@@ -100,7 +110,7 @@ float fbm3D(vec3 p) {
   for(int i = 1; i <= octaves; i++) {
     float freq = pow(2.f, float(i));
     float amp = pow(persistence, float(i));
-    total += interpNoise3D(x * freq, y * freq, z * freq) * amp;
+    total += interpNoise(x * freq, y * freq, z * freq) * amp;
   }
   return total;
 }
@@ -137,7 +147,7 @@ float worley(vec3 p) {
 float surflet(vec3 p, vec3 gridPoint) {
   vec3 t2 = abs(p - gridPoint);
   vec3 t = vec3(1.0) - 6.0 * pow(t2, vec3(5.0)) + 15.0 * pow(t2, vec3(4.0)) - 10.0 * pow(t2, vec3(3.0));
-  vec3 gradient = noise3D(gridPoint) * 2.0 - vec3(1.0);
+  vec3 gradient = noise(gridPoint) * 2.0 - vec3(1.0);
   vec3 diff = p - gridPoint;
   float height = dot(diff, gradient);
   return height * t.x * t.y * t.z;
@@ -168,15 +178,19 @@ int biome(vec3 p) {
   float precip = precipitation(p);
   if (temp <= 0.005) {
     if (precip <= 0.005) {
-      return 1;  // temperate
+      // temperate
+      return 1;  
     } else {
-      return 2;  // tundra
+      // tundra
+      return 2;
     }
   } else {
     if (precip <= 0.0001) {
-      return 3;  // desert
+      // desert
+      return 3;
     } else {
-      return 4;  // tropical
+      // tropics
+      return 4;
     }
   }
 }
@@ -185,47 +199,72 @@ void main()
 {
   fs_Pos = vs_Pos;
   fs_CameraPos = inverse(u_ViewProj) * vec4(0, 0, 0, 1);
-  mat3 invTranspose = mat3(u_ModelInvTr);
-  fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
-                                                          // Transform the geometry's normals by the inverse transpose of the
-                                                          // model matrix. This is necessary to ensure the normals remain
-                                                          // perpendicular to the surface after the surface is transformed by
-                                                          // the model matrix.*/
+  vec4 modelposition = u_Model * vs_Pos;
 
-  vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
-
+  // move sun
   lightPos.x += 10.0 * cos(float(u_Time) * 0.005);
   lightPos.y += 10.0 * sin(float(u_Time) * 0.005);
-  fs_LightVec = normalize(lightPos - modelposition);  // Compute the direction in which the light source lies
+  fs_LightVec = normalize(lightPos - modelposition);
 
-  // displace terrain by biome
+  // displace terrain
+  vec3 fbmInput = modelposition.xyz * 0.64 + vec3(sin(float(u_Time) * 0.0005));
+  float noise = fbm(fbmInput);
+  float t = gain(noise, 0.4);
+  modelposition.xyz += 0.3 * t * vec3(vs_Nor);
+
   int biome = biome(modelposition.xyz);
   fs_Biome = float(biome);
   if (biome == 2) {
     // add mountains to tundra
-    modelposition.xyz += 0.08 * parabola(float(u_Time) * 0.001) * pow(worley(modelposition.xyz), 3.0) * vec3(vs_Nor);
+    float noise = pow(worley(modelposition.xyz / 20.0), 3.0);
+    float scale = parabola(float(u_Time) * 0.001);
+    modelposition.xyz += 0.18 * scale * noise * vec3(vs_Nor);
   } else if (biome == 3) {
     // add canyons to desert
-    float noise = worley(modelposition.xyz / 4.0);
-    if (noise < 0.4) {
-      modelposition.xyz -= 0.25 * (0.5 * easeInOutQuart(sin(float(u_Time) * 0.003)) + 1.0) * vec3(vs_Nor);
+    float noise = worley(modelposition.xyz / 60.0);
+    float scale = (0.5 * easeInOutQuart(sin(float(u_Time) * 0.003)) + 1.0);
+    float t = bias(noise, 0.9);
+    if (t > 0.88) {
+      modelposition.xyz -= 0.06 * scale * t * vec3(vs_Nor);
     }
   }
-  modelposition.xyz += 0.64 * fbm3D(modelposition.xyz + vec3(sin(float(u_Time) * .0001))) * vec3(vs_Nor);
   fs_Height = length(modelposition.xyz);
   fs_Col = vs_Col;
 
-  // TODO recalculate surface normals
-  /*
-  float d = 0.00005;
-  fs_Nor = 
-    vec4(
-      fbm3D(modelposition.xyz + vec3(d, 0, 0)) - fbm3D(modelposition.xyz - vec3(d, 0, 0)), 
-      fbm3D(modelposition.xyz + vec3(0, d, 0)) - fbm3D(modelposition.xyz - vec3(0, d, 0)), 
-      fbm3D(modelposition.xyz + vec3(0, 0, d)) - fbm3D(modelposition.xyz - vec3(0, 0, d)), 
-      0.0
-    );*/
-      
-  gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
-                                           // used to render the final positions of the geometry's vertices
+  // recalculate normal
+  float d = 0.001;
+  float r = fs_Height;
+  float theta = atan(modelposition.y, modelposition.x);
+  float phi = atan(length(modelposition.xy), modelposition.z);
+
+  vec3 px1 = vec3(r * cos(theta - d) * sin(phi),
+                  r * sin(theta - d) * sin(phi),
+                  r * cos(phi));
+  vec3 px2 = vec3(r * cos(theta + d) * sin(phi),
+                  r * sin(theta + d) * sin(phi),
+                  r * cos(phi));
+  vec3 py1 = vec3(r * cos(theta) * sin(phi - d),
+                  r * sin(theta) * sin(phi - d),
+                  r * cos(phi - d));
+  vec3 py2 = vec3(r * cos(theta) * sin(phi + d),
+                  r * sin(theta) * sin(phi + d),
+                  r * cos(phi + d));
+
+  float nx1 = fbm(px1);  
+  float nx2 = fbm(px2);
+  float ny1 = fbm(py1);
+  float ny2 = fbm(py2);
+  float xDiff = nx2 - nx1;
+  float yDiff = ny2 - ny1;
+
+  vec3 normal = vec3(xDiff, yDiff, sqrt(1.0 - pow(xDiff, 2.0) - pow(yDiff, 2.0)));
+  vec3 tangent = normalize(cross(vec3(0.0, 1.0, 0.0), vs_Nor.xyz));
+  vec3 bitangent = normalize(cross(tangent, vs_Nor.xyz));
+  mat4 transf = mat4(tangent.x, tangent.y, tangent.z, 0.0,
+                     bitangent.x, bitangent.y, bitangent.z, 0.0,
+                     normal.x, normal.y, normal.z, 0.0,
+                     0.0, 0.0, 0.0, 1.0);
+  fs_Nor = normalize(transf * vs_Nor);
+
+  gl_Position = u_ViewProj * modelposition;
 }

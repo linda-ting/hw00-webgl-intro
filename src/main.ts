@@ -14,9 +14,9 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 6,
   'Load Scene': loadScene, // A function pointer, essentially
-  'Color': [90, 115, 255],
-  temperature: 5,
-  precipitation: 5
+  'Color': [140, 100, 255],
+  temperature: 8,
+  precipitation: 2
 };
 
 let icosphere: Icosphere;

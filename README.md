@@ -5,10 +5,11 @@ by Linda Ting (lstting)
 
 References:
 1. [Easing functions](https://easings.net/)
+2. [Cosine gradient generator](http://dev.thi.ng/gradients/)
 
 Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/)
 
-![](img/planet_2.png)
+![](img/planet_3.png)
 
 Techniques used:
 1. 3D fractial brownian motion used to generate terrain height and fog/clouds (3D interpolation)
@@ -17,6 +18,11 @@ Techniques used:
 4. Base terrain is modified using worley noise depending on biome type
 5. Terrain modification by biome is animated with an easing function and parabolic signal
 6. Lambertian and Blinn-phong shading
+
+User inputs:
+1. Temperature slider
+2. Precipitation slider 
+3. Color picker
 
 ## HW0: Submission
 Added features include:
