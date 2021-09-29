@@ -158,21 +158,64 @@ vec3 rgb(int r, int g, int b) {
   return vec3(float(r) / 255.0, float(g) / 255.0, float(b) / 255.0);
 }
 
-vec3 terrainColor(vec3 p) {
-  int biome = biome(p);
-  vec3 a = vec3(0.628, 0.708, 0.788);
-  vec3 b = vec3(-0.212, 0.268, 0.168);
-  vec3 c = vec3(u_Color);
-  vec3 d = vec3(-0.233, 0.148, 0.425);
-  float h = fs_Height * 3.0;
-  return palette(h, a, b, c, d);
+vec3 terrainColor(float height, int biome) {
+  if (height <= 1.0) {
+    return vec3(230.0, 107.0, 79.0) / vec3(255.0);
+  }
+  
+  if (biome != 3) {
+      if (height <= 1.56) {
+      // deep ocean
+      return u_Color.rgb + vec3(.14, -.21,-.18);
+    } else if (height <= 1.675) {
+      // mid ocean
+      return u_Color.rgb;
+    } else if (height <= 1.71) {
+      // shallow ocean
+      return u_Color.rgb + vec3(-.03, .39, -.24);
+    }
+  }
+
+  if (biome == 1) {
+    // temperate
+    if (height <= 1.67) {
+      return vec3(216.0, 255.0, 144.0) / vec3(255.0);
+    } else if (height <= 1.76) {
+      return vec3(179.0, 245.0, 118.0) / vec3(255.0);
+    }
+    return vec3(255.0, 232.0, 206.0) / vec3(255.0);
+  } else if (biome == 2) {
+    // tundra
+    if (height <= 1.67) {
+      return vec3(154.0, 181.0, 255.0) / vec3(255.0);
+    } else if (height <= 1.76) {
+      return vec3(147.0, 239.0, 217.0) / vec3(255.0);
+    }
+    return vec3(212.0, 243.0, 219.0)/ vec3(255.0);
+  } else if (biome == 3) {
+    // desert
+    if (height <= 1.6) {
+      return vec3(230.0, 107.0, 79.0) / vec3(255.0);
+    } else if (height <= 1.745) {
+      return vec3(255.0, 167.0, 113.0)  / vec3(255.0);
+    }
+    return vec3(255.0, 204.0, 204.0) / vec3(255.0);
+  } else {
+    // tropical
+    if (height <= 1.67) {
+      return vec3(232.0, 250.0, 232.0) / vec3(255.0);
+    } else if (height <= 1.75) {
+      return vec3(227.0, 198.0, 255.0) / vec3(255.0);
+    }
+    return vec3(0.0, 165.0, 135.0) / vec3(255.0);
+  }
 }
 
 void main()
 {
   vec3 fbmInput = fs_Pos.xyz * 0.64 + vec3(sin(float(u_Time) * 0.0005));
   float noise = fbm(fbmInput);
-  vec4 diffuseColor = vec4(terrainColor(fs_Pos.xyz), 1.0) + fog(fs_Pos.xyz);
+  vec4 diffuseColor = vec4(terrainColor(fs_Height, int(fs_Biome)), 1.0) + fog(fs_Pos.xyz);
 
   // calculate diffuse term for Lambert shading
   float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
@@ -180,14 +223,15 @@ void main()
   diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);
 
   // calculate specular light intensity
-  float specularTerm = 0.0;
   vec4 view = normalize(fs_CameraPos - fs_Pos);
   vec4 sumViewLight = view + fs_LightVec;
   vec4 h = sumViewLight / 2.0;
-  specularTerm = max(pow(dot(h, normalize(fs_Nor)), 20.0), 0.0);
+  float specularTerm = max(pow(dot(h, normalize(fs_Nor)), 30.0), 0.0);
 
   float ambientTerm = 0.4;
-  float lightIntensity = diffuseTerm + ambientTerm;
+  float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
+                                                      //to simulate ambient lighting. This ensures that faces that are not
+                                                      //lit by our point light are not completely black.
 
   // compute final shaded color
   out_Col = vec4(diffuseColor.rgb, 1.0);

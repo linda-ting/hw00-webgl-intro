@@ -5,7 +5,6 @@ by Linda Ting (lstting)
 
 References:
 1. [Easing functions](https://easings.net/)
-2. [Cosine gradient generator](http://dev.thi.ng/gradients/)
 
 Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/)
 
@@ -25,6 +24,8 @@ User inputs:
 3. Color picker
 
 ## HW0: Submission
+=======
+## Submission
 Added features include:
 1. UI component to allow user to modify the color of the geometry being rendered
 2. Vertex shader that deforms the geometry over time

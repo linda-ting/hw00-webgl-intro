@@ -206,28 +206,20 @@ void main()
   lightPos.y += 10.0 * sin(float(u_Time) * 0.005);
   fs_LightVec = normalize(lightPos - modelposition);
 
-  // displace terrain
-  vec3 fbmInput = modelposition.xyz * 0.64 + vec3(sin(float(u_Time) * 0.0005));
-  float noise = fbm(fbmInput);
-  float t = gain(noise, 0.4);
-  modelposition.xyz += 0.3 * t * vec3(vs_Nor);
-
+  // displace terrain by biome
   int biome = biome(modelposition.xyz);
   fs_Biome = float(biome);
   if (biome == 2) {
     // add mountains to tundra
-    float noise = pow(worley(modelposition.xyz / 20.0), 3.0);
-    float scale = parabola(float(u_Time) * 0.001);
-    modelposition.xyz += 0.18 * scale * noise * vec3(vs_Nor);
+    modelposition.xyz += 0.08 * parabola(float(u_Time) * 0.001) * pow(worley(modelposition.xyz), 3.0) * vec3(vs_Nor);
   } else if (biome == 3) {
     // add canyons to desert
-    float noise = worley(modelposition.xyz / 60.0);
-    float scale = (0.5 * easeInOutQuart(sin(float(u_Time) * 0.003)) + 1.0);
-    float t = bias(noise, 0.9);
-    if (t > 0.88) {
-      modelposition.xyz -= 0.06 * scale * t * vec3(vs_Nor);
+    float noise = worley(modelposition.xyz / 4.0);
+    if (noise < 0.4) {
+      modelposition.xyz -= 0.25 * (0.5 * easeInOutQuart(sin(float(u_Time) * 0.003)) + 1.0) * vec3(vs_Nor);
     }
   }
+  modelposition.xyz += 0.64 * fbm(modelposition.xyz + vec3(sin(float(u_Time) * .0001))) * vec3(vs_Nor);
   fs_Height = length(modelposition.xyz);
   fs_Col = vs_Col;
 
