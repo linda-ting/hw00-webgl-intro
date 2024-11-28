@@ -6,7 +6,7 @@ by Linda Ting (lstting)
 References:
 1. [Easing functions](https://easings.net/)
 
-Demo available [here](https://linda-ting.github.io/hw00-webgl-intro/)
+Demo available [here](https://linda-ting.github.io/planet/)
 
 ![](img/planet_3.png)
 
